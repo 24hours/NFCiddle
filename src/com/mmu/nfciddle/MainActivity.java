@@ -2,17 +2,18 @@ package com.mmu.nfciddle;
 
 import java.io.IOException;
 
-import android.nfc.NfcAdapter;
-import android.nfc.Tag;
-import android.nfc.tech.MifareClassic;
-import android.os.Bundle;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentFilter.MalformedMimeTypeException;
+import android.nfc.NfcAdapter;
+import android.nfc.Tag;
+import android.nfc.tech.MifareClassic;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
+import android.view.View;
 
 public class MainActivity extends Activity {
 	private static NfcAdapter mAdapter;
@@ -55,51 +56,56 @@ public class MainActivity extends Activity {
   		// Parse the intent
   		String action = intent.getAction();
   		if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)) {
-  			// status_Data.setText("Discovered tag with intent: " + intent);
+  			Log.i("resolveIntent","Discovered tag with intent: " + intent);
   			Tag tagFromIntent = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
   			MifareClassic mfc = MifareClassic.get(tagFromIntent);
   			byte[] data;
-
-  			try {
+  			
+  			try{
   				mfc.connect();
-  				boolean auth = false;
-  				String cardData = null;
-  				Log.i("resolveIntent", "key with:"+);
-  				// Authenticating and reading Block 0 /Sector 1
-  				auth = mfc.authenticateSectorWithKeyA(0,key3);
-
-  				if (auth) {
-  					data = mfc.readBlock(2);
-  					cardData = getHexString(data, data.length);
-
-  					if (cardData != null) {						
-  						block_0_Data.setText(cardData);
-  					} else {
-  						showAlert(EMPTY_BLOCK_0);
-  					}
-  					
-  					// reading Block 0 /Sector 1
-  					data = mfc.readBlock(3);
-  					cardData = getHexString(data, data.length);
-
-  					if (cardData != null) {
-  						block_1_Data.setT;ext(cardData);
-  					} else {
-  						showAlert(EMPTY_BLOCK_1);
-  					}
-  				} else {
-  					showAlert(AUTH);
-  				}
-
-  			} catch (IOException e) {
-  				Log.e(TAG, e.getLocalizedMessage());
-  				showAlert(NETWORK);
   			}
+  			catch (IOException e) {
+	  			Log.e("resolveIntent", e.getLocalizedMessage());
+	  		}
+  			Log.i("TRY", "1"+asBytes("a0a1a2a3a4a5")[0]);
+		  	boolean auth = false;
+		  	String cardData = null;
+		  	//Log.i("resolveIntent", "key with:"+);
+		  		
+		  	for(int sector=0; sector< mfc.getSectorCount() ;sector++){
+		  		try{
+		  			Log.i("resolveIntent","Authentication on Sector:"+sector);
+		  			auth = mfc.authenticateSectorWithKeyA(sector,asBytes("a0a1a2a3a4a5"));
+		  			if (auth) {
+		  				for(int block= mfc.sectorToBlock(sector); block < mfc.sectorToBlock(sector)+mfc.getBlockCountInSector(sector); block++){
+				  			data = mfc.readBlock(block);
+		  					cardData = getHexString(data, data.length);
+		  					
+			  				if (cardData != null) {						
+			  					Log.i("resolveIntent",sector+" B"+block+":"+cardData);
+			  				} else {
+			  					Log.e("resolveIntent","Data Read failed");
+			  				}
+		  				}
+		  			} else {
+		  				Log.e("resolveIntent","Authentication Failure");
+		  			}
+		  		}catch (IOException e) {
+		  			Log.e("resolveIntent", e.getLocalizedMessage());
+		  		}
+		  	}
   		}
   	}
     
-    byte [] stringToHex(String key){
-    	return key.getBytes();
+    public static byte[] asBytes (String s) {
+        String s2;
+        byte[] b = new byte[s.length() / 2];
+        int i;
+        for (i = 0; i < s.length() / 2; i++) {
+            s2 = s.substring(i * 2, i * 2 + 2);
+            b[i] = (byte)(Integer.parseInt(s2, 16) & 0xff);
+        }
+        return b;
     }
     
 	public static String getHexString(byte[] raw, int len) {
@@ -119,6 +125,16 @@ public class MainActivity extends Activity {
 
 		return new String(hex);
 	}
+	
+	public void onNewIntent(Intent intent) {
+		Log.i("onNewIntent", "Discovered tag with intent: " + intent);
+		resolveIntent(intent);
+	}
+	
+	void getKey(View v){
+		
+	}
+	
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.activity_main, menu);
