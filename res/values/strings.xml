@@ -4,5 +4,8 @@
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_main">NFC-fiddle</string>
+    <string name="scan_tag">TAP your NFC Card on Device Sensor</string>
+    <string name="indicator">Which is somewhere around Here if you are using Google Nexus 7</string>
+    <string name="info">Since this App is intended to scan older version of Touch N Go Card(Mifare Classic), The scan will fail unless the key is obtained through another source (from me)</string>
 
 </resources>
