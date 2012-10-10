@@ -26,9 +26,7 @@ public class SEReceiver extends BroadcastReceiver {
     public void onReceive(Context ctx, Intent intent) {
         String action = intent.getAction();
         Log.d(TAG, "Received: " + action);
-        Log.d(TAG, ""+intent.getDataString());
 
-        
         if (ACTION_AID_SELECTED.equals(action)) {
             byte[] aid = intent.getByteArrayExtra(EXTRA_AID);
             Log.d(TAG, "AID: " + Hex.toHex(aid));
@@ -39,7 +37,6 @@ public class SEReceiver extends BroadcastReceiver {
             byte[] block = intent.getByteArrayExtra(EXTRA_MIFARE_BLOCK);
             Log.d(TAG, "Mifare block: " + Hex.toHex(block));
         } else if (RF_FIELD_ON_DETECTED.equals(action)){
-        	Log.i(TAG, "Starting Main");
             Intent i = new Intent();
             i.setClassName("com.mmu.nfciddle", "com.mmu.nfciddle.MainActivity");
             i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

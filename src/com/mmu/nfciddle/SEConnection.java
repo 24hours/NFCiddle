@@ -40,10 +40,10 @@ public class SEConnection implements CardConnection {
             closeMethod = seClazz.getMethod("close", (Class<?>[]) null);
             openMethod.invoke(se, (Object[]) null);
         } catch (InvocationTargetException e) {
-            Log.e(TAG, "Error: " + e.getCause().getMessage(), e);
+            Log.e(TAG, "Invocation Error: " + e.getCause().getMessage(), e);
             throw new RuntimeException(e);
         } catch (Exception e) {
-            Log.e(TAG, "Error: " + e.getMessage(), e);
+            Log.e(TAG, "General Error: " + e.getMessage(), e);
             throw new RuntimeException(e);
         }
     }
@@ -97,7 +97,7 @@ public class SEConnection implements CardConnection {
         return new SECardResponse(response);
     }
 
-    private byte[] sendApdu(byte[] commandApdu) {
+    public byte[] sendApdu(byte[] commandApdu) {
         try {
             Log.d(TAG, String.format("--> %s", toHex(commandApdu)));
             Object response = transceiveMethod.invoke(se, commandApdu);

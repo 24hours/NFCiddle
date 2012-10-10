@@ -40,30 +40,7 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Intent i = getIntent();
-        int actionCode = i.getIntExtra("ACTION", -1);
-        Log.i("MAIN","ACTION Code: "+ actionCode);
-        switch(actionCode){
-        	case 1:
-        		terminal = new SETerminal(getApplication());
-                try {
-                    seConn = terminal.connect();
-                } catch (TerminalException e) {
-                    Log.i("MAIN","Terminal connection fail");
-                }
-                
-                try {
-                    CardResponse response = transmit(fromHex("bq1979dc"), "SENDING ID");
-                    Log.i("MAIN", ""+response);
-                } catch (Exception e) {
-                    Log.e("MAIN", "Error:" + e.getMessage(), e);
-                }
-                
-               
-                
-        		break;
-        	default:		
-        }
+
     }
 	
 	public void getKey(View v){
@@ -76,27 +53,19 @@ public class MainActivity extends Activity {
 	}
 	
 	public void read(View v){
-		if( key == null){
-			AlertDialog.Builder alertbox = new AlertDialog.Builder(this);
-			alertbox.setMessage("Use Mifare Default Key");
-
-			// set a positive/yes button and create a listener
-			alertbox.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-
-				// Save the data from the UI to the database - already done
-				public void onClick(DialogInterface arg0, int arg1) {
-					Intent intent = new Intent(MainActivity.this, ReadActivity.class);
-			    	intent.putExtra("strings", key);
-			    	startActivity(intent);
-				}
-			});
-			
-			alertbox.show();
-		}
 		Intent intent = new Intent(MainActivity.this, ReadActivity.class);
     	intent.putExtra("strings", key);
     	startActivity(intent);
 	}
+	
+	public void write(View v){
+		Log.i("MAIN", "starting Write");
+		Intent intent = new Intent(MainActivity.this, WriteActivity.class);
+    	intent.putExtra("strings", key);
+    	startActivity(intent);
+	}
+	
+	
     
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     	switch(requestCode) {
@@ -134,27 +103,4 @@ public class MainActivity extends Activity {
     
     public void onNewIntent(Intent intent) {
 	}
-
-    private CardResponse transmit(byte[] command, String description) throws TerminalException {
-        CardResponse response = seConn.transmit(command);
-        EMVUtil.printResponse(response, true);
-
-        return response;
-    }
-    
-    public void onDestroy() {
-        super.onDestroy();
-
-        closeSeSilently();
-    }
-
-    private void closeSeSilently() {
-        if (seConn != null) {
-            try {
-                seConn.disconnect(false);
-            } catch (TerminalException e) {
-                Log.w("MAIN", "Eror closing SE: " + e.getMessage(), e);
-            }
-        }
-    }
 }
