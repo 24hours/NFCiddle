@@ -4,18 +4,15 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Method;
 
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.IntentFilter.MalformedMimeTypeException;
 import android.net.Uri;
 import android.nfc.NfcAdapter;
-import android.nfc.Tag;
-import android.nfc.tech.MifareClassic;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.TextView;
@@ -44,78 +41,8 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mAdapter = NfcAdapter.getDefaultAdapter(this);
-        mPendingIntent = PendingIntent.getActivity(this, 0, new Intent(this,
-				getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
-		// Setup an intent filter for all MIME based dispatches
-		IntentFilter ndef = new IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED);
-		
-		try {
-			ndef.addDataType("*/*");
-		} catch (MalformedMimeTypeException e) {
-			throw new RuntimeException("fail", e);
-		}
-		mFilters = new IntentFilter[] { ndef, };
-
-		// Setup a tech list for all NfcF tags
-		mTechLists = new String[][] { new String[] { MifareClassic.class
-				.getName() } };
-
-		Intent readIntent = new Intent(this, ReadActivity.class);
-		Bundle nfcIntent = new Bundle();
-		nfcIntent.putInt("KEY",1);
-		readIntent.putExtras(nfcIntent);
-		//startActivity(readIntent);
-		Intent intent = getIntent();
-		resolveIntent(intent);
     }
 
-    private void resolveIntent(Intent intent) {
-  		// Parse the intent
-    	Log.i("resolveIntent","Main");
-  		String action = intent.getAction();
-  		if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)) {
-  			Log.i("resolveIntent","Discovered tag with intent: " + intent);
-  			Tag tagFromIntent = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-  			MifareClassic mfc = MifareClassic.get(tagFromIntent);
-  			byte[] data;
-  			
-  			try{
-  				mfc.connect();
-  			}
-  			catch (IOException e) {
-	  			Log.e("resolveIntent", e.getLocalizedMessage());
-	  		}
-  			Log.i("TRY", "1"+asBytes("a0a1a2a3a4a5")[0]);
-		  	boolean auth = false;
-		  	String cardData = null;
-		  	//Log.i("resolveIntent", "key with:"+);
-		  		
-		  	for(int sector=0; sector< mfc.getSectorCount() ;sector++){
-		  		try{
-		  			Log.i("resolveIntent","Authentication on Sector:"+sector);
-		  			auth = mfc.authenticateSectorWithKeyA(sector,asBytes("a0a1a2a3a4a5"));
-		  			if (auth) {
-		  				for(int block= mfc.sectorToBlock(sector); block < mfc.sectorToBlock(sector)+mfc.getBlockCountInSector(sector); block++){
-				  			data = mfc.readBlock(block);
-		  					cardData = getHexString(data, data.length);
-		  					
-			  				if (cardData != null) {						
-			  					Log.i("resolveIntent",sector+" B"+block+":"+cardData);
-			  				} else {
-			  					Log.e("resolveIntent","Data Read failed");
-			  				}
-		  				}
-		  			} else {
-		  				Log.e("resolveIntent","Authentication Failure");
-		  			}
-		  		}catch (IOException e) {
-		  			Log.e("resolveIntent", e.getLocalizedMessage());
-		  		}
-		  	}
-  		}
-  	}
-    
     public static byte[] asBytes (String s) {
         String s2;
         byte[] b = new byte[s.length() / 2];
@@ -143,11 +70,6 @@ public class MainActivity extends Activity {
 		}
 
 		return new String(hex);
-	}
-	
-	public void onNewIntent(Intent intent) {
-		Log.i("onNewIntent", "Discovered tag with intent: " + intent);
-		resolveIntent(intent);
 	}
 	
 	public void getKey(View v){
@@ -198,21 +120,8 @@ public class MainActivity extends Activity {
     	    //You'll need to add proper error handling here
     	}
     	//Find the view by its id
-    	TextView tv = (TextView)findViewById(R.id.text_view);
+    	//TextView tv = (TextView)findViewById(R.id.text_view);
     	//Set the text
-    	tv.setText(text);
-    }
-    
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (mAdapter != null) mAdapter.disableForegroundDispatch(this);
-    }
-    
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (mAdapter != null) mAdapter.enableForegroundDispatch(this, mPendingIntent, mFilters,
-                mTechLists);
+    	//tv.setText(text);
     }
 }
