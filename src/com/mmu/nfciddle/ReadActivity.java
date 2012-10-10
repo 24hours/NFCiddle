@@ -1,8 +1,5 @@
 package com.mmu.nfciddle;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 
 import android.app.Activity;
@@ -10,7 +7,6 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentFilter.MalformedMimeTypeException;
-import android.net.Uri;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.MifareClassic;
@@ -18,22 +14,18 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 
-public class MainActivity extends Activity {
+public class ReadActivity extends Activity {
 	private static NfcAdapter mAdapter;
 	private static PendingIntent mPendingIntent;
 	private static IntentFilter[] mFilters;
 	private static String[][] mTechLists;
-	
-	/*
-	* Each sector will have their own 2 key, according to legend, 
-	* > first key allow read only
-	* > second key allow read/write 
-	*/ 
 	private static String [][]key;
-	private static Intent readIntent;
-	final int ACTIVITY_CHOOSE_FILE = 1;
+	private TableRow dummy;
+	private static TableLayout layout;
 	
 	private static final byte[] HEX_CHAR_TABLE = { (byte) '0', (byte) '1',
 		(byte) '2', (byte) '3', (byte) '4', (byte) '5', (byte) '6',
@@ -43,7 +35,10 @@ public class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_read);
+        layout = (TableLayout)findViewById(R.id.dumpTable);
+        dummy = new TableRow(this);
+        dummy.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.FILL_PARENT, TableRow.LayoutParams.WRAP_CONTENT));
         mAdapter = NfcAdapter.getDefaultAdapter(this);
         mPendingIntent = PendingIntent.getActivity(this, 0, new Intent(this,
 				getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
@@ -60,19 +55,19 @@ public class MainActivity extends Activity {
 		// Setup a tech list for all NfcF tags
 		mTechLists = new String[][] { new String[] { MifareClassic.class
 				.getName() } };
-
-		Intent readIntent = new Intent(this, ReadActivity.class);
-		Bundle nfcIntent = new Bundle();
-		nfcIntent.putInt("KEY",1);
-		readIntent.putExtras(nfcIntent);
-		//startActivity(readIntent);
-		Intent intent = getIntent();
-		resolveIntent(intent);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.activity_read, menu);
+        return true;
+    }
+    
     private void resolveIntent(Intent intent) {
+    	TextView t = (TextView)findViewById(R.id.tap);
+    	t.setVisibility(View.GONE);
+    	
   		// Parse the intent
-    	Log.i("resolveIntent","Main");
   		String action = intent.getAction();
   		if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)) {
   			Log.i("resolveIntent","Discovered tag with intent: " + intent);
@@ -86,7 +81,7 @@ public class MainActivity extends Activity {
   			catch (IOException e) {
 	  			Log.e("resolveIntent", e.getLocalizedMessage());
 	  		}
-  			Log.i("TRY", "1"+asBytes("a0a1a2a3a4a5")[0]);
+
 		  	boolean auth = false;
 		  	String cardData = null;
 		  	//Log.i("resolveIntent", "key with:"+);
@@ -96,12 +91,14 @@ public class MainActivity extends Activity {
 		  			Log.i("resolveIntent","Authentication on Sector:"+sector);
 		  			auth = mfc.authenticateSectorWithKeyA(sector,asBytes("a0a1a2a3a4a5"));
 		  			if (auth) {
+		  				insertTable("Sector: "+sector);
 		  				for(int block= mfc.sectorToBlock(sector); block < mfc.sectorToBlock(sector)+mfc.getBlockCountInSector(sector); block++){
 				  			data = mfc.readBlock(block);
 		  					cardData = getHexString(data, data.length);
 		  					
 			  				if (cardData != null) {						
 			  					Log.i("resolveIntent",sector+" B"+block+":"+cardData);
+			  					insertTable(""+cardData);
 			  				} else {
 			  					Log.e("resolveIntent","Data Read failed");
 			  				}
@@ -115,17 +112,6 @@ public class MainActivity extends Activity {
 		  	}
   		}
   	}
-    
-    public static byte[] asBytes (String s) {
-        String s2;
-        byte[] b = new byte[s.length() / 2];
-        int i;
-        for (i = 0; i < s.length() / 2; i++) {
-            s2 = s.substring(i * 2, i * 2 + 2);
-            b[i] = (byte)(Integer.parseInt(s2, 16) & 0xff);
-        }
-        return b;
-    }
     
 	public static String getHexString(byte[] raw, int len) {
 		byte[] hex = new byte[2 * len];
@@ -146,61 +132,30 @@ public class MainActivity extends Activity {
 	}
 	
 	public void onNewIntent(Intent intent) {
-		Log.i("onNewIntent", "Discovered tag with intent: " + intent);
+		Log.i("onNewIntent Read", "Discovered tag with intent: " + intent);
+		if(intent == null){
+			Log.e("onNewIntent","NULL pointer exception");
+		}
 		resolveIntent(intent);
 	}
 	
-	public void getKey(View v){
-		Intent chooseFile;
-		Intent intent;
-		chooseFile = new Intent(Intent.ACTION_GET_CONTENT);
-		chooseFile.setType("file/*");
-		intent = Intent.createChooser(chooseFile, "Choose a file");
-		startActivityForResult(intent, ACTIVITY_CHOOSE_FILE);
+	public void insertTable(String s){
+		TextView t = new TextView(this);
+		t.setText(s);
+		dummy = new TableRow(this);
+	    dummy.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.FILL_PARENT, TableRow.LayoutParams.WRAP_CONTENT));
+		dummy.addView(t);
+	    layout.addView(dummy ,new TableLayout.LayoutParams(TableLayout.LayoutParams.FILL_PARENT, TableLayout.LayoutParams.WRAP_CONTENT));
 	}
-	
-	public void read(View v){
-		Intent i = new Intent(this, ReadActivity.class);
-		startActivity(i);
-	}
-	
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_main, menu);
-        return true;
-    }
-    
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    	switch(requestCode) {
-    		case ACTIVITY_CHOOSE_FILE: {
-    			if (resultCode == RESULT_OK){
-    				Uri uri = data.getData();
-    				String filePath = uri.getPath();
-    				readFile(filePath);
-    			}
-    		}
-    	}
-    }
-    
-    private void readFile(String filePath) {
-    	File file = new File(filePath);
-    	//Read text from file
-    	StringBuilder text = new StringBuilder();
-    	try {
-    		BufferedReader br = new BufferedReader(new FileReader(file));
-    		String line;
-    		while ((line = br.readLine()) != null) {
-    			text.append(line);
-    			text.append('\n');
-    		}
-    	}
-    	catch (IOException e) {
-    	    //You'll need to add proper error handling here
-    	}
-    	//Find the view by its id
-    	TextView tv = (TextView)findViewById(R.id.text_view);
-    	//Set the text
-    	tv.setText(text);
+    public static byte[] asBytes (String s) {
+        String s2;
+        byte[] b = new byte[s.length() / 2];
+        int i;
+        for (i = 0; i < s.length() / 2; i++) {
+            s2 = s.substring(i * 2, i * 2 + 2);
+            b[i] = (byte)(Integer.parseInt(s2, 16) & 0xff);
+        }
+        return b;
     }
     
     @Override
