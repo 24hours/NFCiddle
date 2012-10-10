@@ -3,12 +3,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="left" >
-	<TextView
-		android:layout_width="wrap_content"
-	    android:layout_height="match_parent"
-	    android:text="@string/tap"
-	    android:id="@+id/tap">
-	</TextView>
+
+    <TextView
+        android:id="@+id/tap"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Touch Your Card Here"
+        android:textSize="25dp" />
+
 	<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
 	  android:id="@+id/scroll" android:layout_width="fill_parent"
 	  android:layout_height="wrap_content">

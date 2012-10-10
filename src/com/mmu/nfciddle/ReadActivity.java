@@ -23,7 +23,7 @@ public class ReadActivity extends Activity {
 	private static PendingIntent mPendingIntent;
 	private static IntentFilter[] mFilters;
 	private static String[][] mTechLists;
-	private static String [][]key;
+	private static String []key;
 	private TableRow dummy;
 	private static TableLayout layout;
 	
@@ -40,11 +40,13 @@ public class ReadActivity extends Activity {
         dummy = new TableRow(this);
         dummy.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.FILL_PARENT, TableRow.LayoutParams.WRAP_CONTENT));
         mAdapter = NfcAdapter.getDefaultAdapter(this);
-        mPendingIntent = PendingIntent.getActivity(this, 0, new Intent(this,
-				getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
-		// Setup an intent filter for all MIME based dispatches
+        mPendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
 		IntentFilter ndef = new IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED);
 		
+		Intent intent = getIntent();
+		key = intent.getStringArrayExtra("strings");
+		if( key == null)
+			initKey();
 		try {
 			ndef.addDataType("*/*");
 		} catch (MalformedMimeTypeException e) {
@@ -52,22 +54,13 @@ public class ReadActivity extends Activity {
 		}
 		mFilters = new IntentFilter[] { ndef, };
 
-		// Setup a tech list for all NfcF tags
-		mTechLists = new String[][] { new String[] { MifareClassic.class
-				.getName() } };
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_read, menu);
-        return true;
+		mTechLists = new String[][] { new String[] { MifareClassic.class.getName() } };
     }
     
     private void resolveIntent(Intent intent) {
     	TextView t = (TextView)findViewById(R.id.tap);
     	t.setVisibility(View.GONE);
-    	
-  		// Parse the intent
+
   		String action = intent.getAction();
   		if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)) {
   			Log.i("resolveIntent","Discovered tag with intent: " + intent);
@@ -84,12 +77,11 @@ public class ReadActivity extends Activity {
 
 		  	boolean auth = false;
 		  	String cardData = null;
-		  	//Log.i("resolveIntent", "key with:"+);
 		  		
 		  	for(int sector=0; sector< mfc.getSectorCount() ;sector++){
 		  		try{
-		  			Log.i("resolveIntent","Authentication on Sector:"+sector);
-		  			auth = mfc.authenticateSectorWithKeyA(sector,asBytes("a0a1a2a3a4a5"));
+		  			Log.i("resolveIntent","Authentication on Sector:"+sector+" with key:"+key[sector]);
+		  			auth = mfc.authenticateSectorWithKeyA(sector,asBytes(key[sector]));
 		  			if (auth) {
 		  				insertTable("Sector: "+sector);
 		  				for(int block= mfc.sectorToBlock(sector); block < mfc.sectorToBlock(sector)+mfc.getBlockCountInSector(sector); block++){
@@ -101,10 +93,12 @@ public class ReadActivity extends Activity {
 			  					insertTable(""+cardData);
 			  				} else {
 			  					Log.e("resolveIntent","Data Read failed");
+			  					insertTable("Data Read Fail");
 			  				}
 		  				}
 		  			} else {
 		  				Log.e("resolveIntent","Authentication Failure");
+		  				insertTable("Authentication Fail on Sector: "+sector);
 		  			}
 		  		}catch (IOException e) {
 		  			Log.e("resolveIntent", e.getLocalizedMessage());
@@ -133,9 +127,6 @@ public class ReadActivity extends Activity {
 	
 	public void onNewIntent(Intent intent) {
 		Log.i("onNewIntent Read", "Discovered tag with intent: " + intent);
-		if(intent == null){
-			Log.e("onNewIntent","NULL pointer exception");
-		}
 		resolveIntent(intent);
 	}
 	
@@ -169,5 +160,11 @@ public class ReadActivity extends Activity {
         super.onResume();
         if (mAdapter != null) mAdapter.enableForegroundDispatch(this, mPendingIntent, mFilters,
                 mTechLists);
+    }
+    
+    private void initKey(){
+    	key = new String[16];
+    	for(int i=0 ; i < 16 ; i++)
+    		key[i] = "a0a1a2a3a4a5";
     }
 }
