@@ -60,7 +60,8 @@ public class ReadActivity extends Activity {
     private void resolveIntent(Intent intent) {
     	TextView t = (TextView)findViewById(R.id.tap);
     	t.setVisibility(View.GONE);
-
+        layout.removeAllViewsInLayout();
+        
   		String action = intent.getAction();
   		if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)) {
   			Log.i("resolveIntent","Discovered tag with intent: " + intent);

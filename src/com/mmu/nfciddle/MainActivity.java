@@ -1,10 +1,17 @@
 package com.mmu.nfciddle;
 
+import static com.mmu.nfciddle.Hex.fromHex;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
+import sasc.emv.EMVUtil;
+import sasc.terminal.CardConnection;
+import sasc.terminal.CardResponse;
+import sasc.terminal.Terminal;
+import sasc.terminal.TerminalException;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
@@ -26,10 +33,37 @@ public class MainActivity extends Activity {
 	private static Intent readIntent;
 	final int ACTIVITY_CHOOSE_FILE = 1;
 	
+    private Terminal terminal;
+    private CardConnection seConn;
+    
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Intent i = getIntent();
+        int actionCode = i.getIntExtra("ACTION", -1);
+        Log.i("MAIN","ACTION Code: "+ actionCode);
+        switch(actionCode){
+        	case 1:
+        		terminal = new SETerminal(getApplication());
+                try {
+                    seConn = terminal.connect();
+                } catch (TerminalException e) {
+                    Log.i("MAIN","Terminal connection fail");
+                }
+                
+                try {
+                    CardResponse response = transmit(fromHex("bq1979dc"), "SENDING ID");
+                    Log.i("MAIN", ""+response);
+                } catch (Exception e) {
+                    Log.e("MAIN", "Error:" + e.getMessage(), e);
+                }
+                
+               
+                
+        		break;
+        	default:		
+        }
     }
 	
 	public void getKey(View v){
@@ -59,6 +93,9 @@ public class MainActivity extends Activity {
 			
 			alertbox.show();
 		}
+		Intent intent = new Intent(MainActivity.this, ReadActivity.class);
+    	intent.putExtra("strings", key);
+    	startActivity(intent);
 	}
     
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -72,6 +109,7 @@ public class MainActivity extends Activity {
     		}
     	}
     }
+    
     
     private void readFile(String filePath) {
     	File file = new File(filePath);
@@ -92,5 +130,31 @@ public class MainActivity extends Activity {
     	catch (IOException e) {
     	    Log.e("ReadFile",e.getLocalizedMessage());
     	}
+    }
+    
+    public void onNewIntent(Intent intent) {
+	}
+
+    private CardResponse transmit(byte[] command, String description) throws TerminalException {
+        CardResponse response = seConn.transmit(command);
+        EMVUtil.printResponse(response, true);
+
+        return response;
+    }
+    
+    public void onDestroy() {
+        super.onDestroy();
+
+        closeSeSilently();
+    }
+
+    private void closeSeSilently() {
+        if (seConn != null) {
+            try {
+                seConn.disconnect(false);
+            } catch (TerminalException e) {
+                Log.w("MAIN", "Eror closing SE: " + e.getMessage(), e);
+            }
+        }
     }
 }
