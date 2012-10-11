@@ -21,10 +21,10 @@ Write
 
 Emulation(Not Implemented)
 -------------------
-The function are implemented partially but not working.If you are intereted to explore on Card Emulation. 
 1. Root priviledge are required for this to work.
 2. You must insert your self sign cerificate for the apps to access secure element.
 	keytool -exportcert -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android|xxd -p -|tr -d '\n'
 3. Insert the key string to /etc/nfcee_access.xml.
 	<signer android:signature="308 ..key... " >
 	This will allow all app generated on your eclipse to access Secure Element.
+note:The function are implemented partially but not working.Its only included for those who are interested for Card Emulation
