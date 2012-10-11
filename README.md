@@ -27,4 +27,4 @@ Emulation(Not Implemented)
 3. Insert the key string to /etc/nfcee_access.xml.
 	<signer android:signature="308 ..key... " >
 	This will allow all app generated on your eclipse to access Secure Element.
-note:The function are implemented partially but not working.Its only included for those who are interested for Card Emulation
+4. The function are implemented partially but not working.Its only included for those who are interested for Card Emulation
