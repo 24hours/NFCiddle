@@ -59,7 +59,6 @@ public class WriteActivity extends Activity {
 			throw new RuntimeException("fail", e);
 		}
 		mFilters = new IntentFilter[] { ndef, };
-
 		mTechLists = new String[][] { new String[] { MifareClassic.class.getName() } };
     }
     private void resolveIntent(Intent intent) {
@@ -69,7 +68,6 @@ public class WriteActivity extends Activity {
   			Log.i("resolveIntent","Discovered tag with intent: " + intent);
   			Tag tagFromIntent = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
   			MifareClassic mfc = MifareClassic.get(tagFromIntent);
-  			byte[] data;
   			
   			try{
   				mfc.connect();
@@ -79,8 +77,7 @@ public class WriteActivity extends Activity {
 	  		}
 
 		  	boolean auth = false;
-		  	String cardData = null;
-		  		
+		  	
 		  	for(int sector=0; sector< mfc.getSectorCount() ;sector++){
 		  		try{
 		  			Log.i("resolveIntent","Authentication on Sector:"+sector+" with key:"+key[sector]);
@@ -155,8 +152,8 @@ public class WriteActivity extends Activity {
     }
     
     public void initView(){
-    	Log.i("WRITE","initView");
     	LinearLayout writelay = (LinearLayout) findViewById(R.id.writeLay);
+    	//clear screen
     	if(writelay.getChildCount() > 0) 
     		writelay.removeAllViews(); 
     	
@@ -167,6 +164,7 @@ public class WriteActivity extends Activity {
     	    	alert();
     	    }
     	});
+    	
     	writelay.addView(btn);
 		writeField = new EditText[64];
 		sector = new TextView[16];
@@ -183,7 +181,7 @@ public class WriteActivity extends Activity {
 			    	else
 			    		writeField[(4*i)+j].setText(ReadActivity.cardData[(4*i)+j]);
 	    		}catch(Exception e){
-	    			writeField[(4*i)+j].setText("00000000000000");
+	    			writeField[(4*i)+j].setText("");
 	    		}
 	    		writelay.addView(writeField[(4*i)+j]);
 	    	}
@@ -198,9 +196,9 @@ public class WriteActivity extends Activity {
 				registerIntent();
 			}
 		});
-		// display box
 		alertbox.show();
     }
+    
     private void initKey(){
     	key = new String[16];
     	for(int i=0 ; i < 16 ; i++)

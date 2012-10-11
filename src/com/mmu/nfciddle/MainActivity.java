@@ -25,22 +25,13 @@ import android.util.Log;
 import android.view.View;
 
 public class MainActivity extends Activity {
-	private static NfcAdapter mAdapter;
-	private static PendingIntent mPendingIntent;
-	private static IntentFilter[] mFilters;
-	private static String[][] mTechLists;
 	private static String []key;
-	private static Intent readIntent;
 	final int ACTIVITY_CHOOSE_FILE = 1;
-	
-    private Terminal terminal;
-    private CardConnection seConn;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
     }
 	
 	public void getKey(View v){
@@ -53,13 +44,14 @@ public class MainActivity extends Activity {
 	}
 	
 	public void read(View v){
+		//onClicklistener from [Read Card] button
 		Intent intent = new Intent(MainActivity.this, ReadActivity.class);
     	intent.putExtra("strings", key);
     	startActivity(intent);
 	}
 	
 	public void write(View v){
-		Log.i("MAIN", "starting Write");
+		//onClicklistener from [Write Card] button
 		Intent intent = new Intent(MainActivity.this, WriteActivity.class);
     	intent.putExtra("strings", key);
     	startActivity(intent);
@@ -100,7 +92,4 @@ public class MainActivity extends Activity {
     	    Log.e("ReadFile",e.getLocalizedMessage());
     	}
     }
-    
-    public void onNewIntent(Intent intent) {
-	}
 }

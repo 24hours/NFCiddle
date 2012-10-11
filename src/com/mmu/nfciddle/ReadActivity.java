@@ -27,6 +27,8 @@ public class ReadActivity extends Activity {
 	private TableRow dummy;
 	private static TableLayout layout;
 	public static String [] cardData;
+	// I need this for write_activity to access the data dump
+	// need-to-fix
 	
 	private static final byte[] HEX_CHAR_TABLE = { (byte) '0', (byte) '1',
 		(byte) '2', (byte) '3', (byte) '4', (byte) '5', (byte) '6',
@@ -39,6 +41,7 @@ public class ReadActivity extends Activity {
         setContentView(R.layout.activity_read);
         layout = (TableLayout)findViewById(R.id.dumpTable);
         dummy = new TableRow(this);
+        cardData = new String[64];
         dummy.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.FILL_PARENT, TableRow.LayoutParams.WRAP_CONTENT));
         mAdapter = NfcAdapter.getDefaultAdapter(this);
         mPendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
@@ -48,13 +51,14 @@ public class ReadActivity extends Activity {
 		key = intent.getStringArrayExtra("strings");
 		if( key == null)
 			initKey();
+		
 		try {
 			ndef.addDataType("*/*");
 		} catch (MalformedMimeTypeException e) {
 			throw new RuntimeException("fail", e);
 		}
+		
 		mFilters = new IntentFilter[] { ndef, };
-		cardData = new String[64];
 		mTechLists = new String[][] { new String[] { MifareClassic.class.getName() } };
     }
     
